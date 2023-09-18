@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Stack, Typography, Button, TextField, Box, Checkbox } from '@mui/material';
+import {useState} from 'react'
+import {Stack, Typography, Button, TextField, Box, Checkbox} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddBoxIcon from '@mui/icons-material/AddBox';
@@ -12,10 +12,10 @@ export default function ToDoList() {
     const [selectedKey, setSelectedKey] = useState(-1);
 
     const handleAddTask = () => {
-      if (taskText.trim() !== '') {
-        setTasks([...tasks, taskText]);
-        setTaskText('');
-      }
+        if (taskText.trim() !== '') {
+            setTasks([...tasks, taskText]);
+            setTaskText('');
+        }
     };
 
     const handleDeleteTask = (selectedKey) => {
@@ -34,7 +34,32 @@ export default function ToDoList() {
         setEditMode(false);
         setSelectedKey(-1);
     };
-    console.log(selectedKey)
+
+    function convertTasksToCSV(tasks) {
+        const header = 'Task\n';
+        const csv = tasks.map(task => task + '\n').join('');
+        return header + csv;
+    };
+
+    function exportToCSV() {
+        const csvData = convertTasksToCSV(tasks);
+
+        // Create a Blob containing the CSV data
+        const blob = new Blob([csvData], {type: 'text/csv'});
+
+        // Create a temporary link element to trigger the download
+        const a = document.createElement('a');
+        a.href = window.URL.createObjectURL(blob);
+        a.download = 'tasks.csv';
+
+        // Trigger the click event on the link to start the download
+        a.click();
+
+        // Cleanup
+        window.URL.revokeObjectURL(a.href);
+    };
+
+
     const renderUnit = (tasks) => {
 
         if (tasks.length <= 0) {
@@ -42,13 +67,16 @@ export default function ToDoList() {
                 <Typography mt={5}>Please add a task!</Typography>
             )
         };
-    
+
         return (
             <Box>
                 {!editMode ? (
                     tasks.map((taskText, key) => (
-                        <Typography key={key} onDoubleClick={() => {setEditMode(true); setSelectedKey(key)}}>
-                            <Checkbox />
+                        <Typography key={key} onDoubleClick={() => {
+                            setEditMode(true);
+                            setSelectedKey(key)
+                        }}>
+                            <Checkbox/>
                             {taskText}
                             <Button
                                 onClick={() => {
@@ -77,23 +105,25 @@ export default function ToDoList() {
                 )}
             </Box>
         );
-    }   
-    
-    return(
+    }
+
+    return (
         <Box mt={editMode ? 0 : 15}>
             <Box>
                 <TextField
                     size='small'
-                    style={{ visibility: editMode ? 'hidden' : 'visible' }}
+                    style={{visibility: editMode ? 'hidden' : 'visible'}}
                     disabled={editMode || taskText.length > 100 || tasks.length >= 10}
                     label='Enter a task ...'
                     variant='outlined'
                     value={taskText}
                     onChange={(e) => setTaskText(e.target.value)}
-                    onKeyDown={(e) => {if (e.key === 'Enter' && taskText.trim() !== "" && tasks.length < 10) handleAddTask()}}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && taskText.trim() !== "" && tasks.length < 10) handleAddTask()
+                    }}
                 />
                 <Button
-                    style={{ visibility: editMode ? 'hidden' : 'visible' }}
+                    style={{visibility: editMode ? 'hidden' : 'visible'}}
                     disabled={tasks.length > 9 || editMode === true}
                     onClick={() => handleAddTask()}
                 >
@@ -104,6 +134,7 @@ export default function ToDoList() {
             <Stack>
                 {renderUnit(tasks)}
             </Stack>
+            <Button onClick={exportToCSV}>Export to CSV</Button>
         </Box>
     );
 }
