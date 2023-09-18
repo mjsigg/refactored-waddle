@@ -3,7 +3,7 @@ import {Stack, Typography, Button, TextField, Box, Checkbox} from '@mui/material
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddBoxIcon from '@mui/icons-material/AddBox';
-import EditList from './EditList';
+import EditTask from './EditTask';
 
 export default function ToDoList() {
     const [taskText, setTaskText] = useState('');
@@ -11,22 +11,48 @@ export default function ToDoList() {
     const [editMode, setEditMode] = useState(false);
     const [selectedKey, setSelectedKey] = useState(-1);
 
+    const processTimeStamp = () => {
+        const currentDate = new Date();
+
+        const month = currentDate.toLocaleString('default', { month: 'long' });
+        const day = currentDate.getDate();
+        const year = currentDate.getFullYear();
+
+        const hour = currentDate.getHours();
+        const minute = currentDate.getMinutes();
+
+        const formattedDate = `Created: ${month} ${day}, ${year} - ${hour}:${minute.toString().padStart(2, '0')}`;
+        return formattedDate;
+    };
+
+
     const handleAddTask = () => {
         if (taskText.trim() !== '') {
-            setTasks([...tasks, taskText]);
+
+            const taskData = {
+                'timestamp': processTimeStamp(),
+                'task_message': taskText,
+            };
+
+            setTasks([...tasks, taskData]);
             setTaskText('');
         }
     };
 
     const handleDeleteTask = (selectedKey) => {
-        const updatedList = tasks.filter((_, key) => key !== selectedKey);
-        setTasks(updatedList);
+        const updatedTasks = tasks.filter((_, key) => key !== selectedKey);
+        setTasks(updatedTasks);
         setSelectedKey(-1);
     };
 
     const handleUpdateTask = (newTaskText, selectedKey, tasks) => {
+        const taskData = {
+            'timestamp': `Updated: ${processTimeStamp()}`,
+            'task_message': newTaskText,
+        };
+
         const updatedTasks = tasks.map((prevTask, key) =>
-            key === selectedKey ? newTaskText : prevTask
+            key === selectedKey ? taskData : prevTask
         );
 
         setTasks(updatedTasks);
@@ -71,13 +97,13 @@ export default function ToDoList() {
         return (
             <Box>
                 {!editMode ? (
-                    tasks.map((taskText, key) => (
+                    tasks.map((task, key) => (
                         <Typography key={key} onDoubleClick={() => {
                             setEditMode(true);
                             setSelectedKey(key)
                         }}>
                             <Checkbox/>
-                            {taskText}
+                            {task.task_message}
                             <Button
                                 onClick={() => {
                                     setSelectedKey(key);
@@ -95,7 +121,7 @@ export default function ToDoList() {
                         </Typography>
                     ))
                 ) : (
-                    <EditList
+                    <EditTask
                         tasks={tasks}
                         handleDelete={handleDeleteTask}
                         handleUpdateTask={handleUpdateTask}
@@ -105,7 +131,7 @@ export default function ToDoList() {
                 )}
             </Box>
         );
-    }
+    };
 
     return (
         <Box mt={editMode ? 0 : 15}>
@@ -134,7 +160,13 @@ export default function ToDoList() {
             <Stack>
                 {renderUnit(tasks)}
             </Stack>
-            <Button onClick={exportToCSV}>Export to CSV</Button>
+            <Button
+                onClick={exportToCSV}
+                style={{visibility: editMode ? 'hidden' : "visible"}}
+                disabled={editMode === true}
+            >
+                Export to CSV
+            </Button>
         </Box>
     );
-}
+};
